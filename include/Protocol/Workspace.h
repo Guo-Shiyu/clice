@@ -13,7 +13,16 @@ struct WorkspaceFolder {
     string name;
 };
 
-struct WorkspaceClientCapabilities {};
+struct DidChangeWatchedFilesClientCapabilities {
+    /// This is an optional field in LSP, so set to false in default.
+    bool dynamicRegistration = false;
+
+    // bool relativePatternSupport = false;
+};
+
+struct WorkspaceClientCapabilities {
+    DidChangeWatchedFilesClientCapabilities didChangeWatchedFiles;
+};
 
 struct WorkspaceSymbolOptions {};
 

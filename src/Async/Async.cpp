@@ -53,7 +53,15 @@ void run() {
         init();
     }
 
-    uv_check_result(uv_os_setenv("UV_THREADPOOL_SIZE", "20"));
+    unsigned thread_num = std::thread::hardware_concurrency();
+    if(thread_num == 0) {
+        // If hardware_concurrency is not available, set a default value.
+        thread_num = 8;
+    }
+
+    char buffer[8] = {};
+    std::format_to_n(buffer, sizeof(buffer), "{}", thread_num);
+    uv_check_result(uv_os_setenv("UV_THREADPOOL_SIZE", buffer));
 
     uv_check_result(uv_run(loop, UV_RUN_DEFAULT));
 

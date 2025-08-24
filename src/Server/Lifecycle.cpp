@@ -21,6 +21,8 @@ async::Task<json::Value> Server::on_initialize(proto::InitializeParams params) {
     /// Set server options.
     opening_files.set_capability(config::server.max_active_file);
 
+    bool watch = params.capabilities.workspace.didChangeWatchedFiles.dynamicRegistration;
+
     /// Load compile commands.json
     for(auto& dir: config::server.compile_commands_dirs) {
         auto content = fs::read(dir + "/compile_commands.json");

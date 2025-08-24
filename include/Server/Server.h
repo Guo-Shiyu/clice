@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Convert.h"
 #include "Indexer.h"
+#include "Watcher.h"
 #include "Async/Async.h"
 #include "Compiler/Command.h"
 #include "Compiler/Preamble.h"
@@ -98,7 +99,7 @@ public:
     }
 
 private:
-    ActiveFile& lru_put_impl(llvm::StringRef path, OpenFile file);
+    ActiveFile& lru_put(llvm::StringRef path, OpenFile file);
 
 private:
     /// The maximum size of the cache.
@@ -165,7 +166,7 @@ private:
 private:
     async::Task<json::Value> on_initialize(proto::InitializeParams params);
 
-    async::Task<> on_initialized(proto::InitializedParams);
+    async::Task<> on_initialized(proto::InitializedParams params);
 
     async::Task<json::Value> on_shutdown(proto::ShutdownParams params);
 
@@ -220,12 +221,12 @@ private:
     /// The current request id.
     std::uint32_t id = 0;
 
-    /// All registered LSP callbacks.
-    llvm::StringMap<Callback> callbacks;
-
     PositionEncodingKind kind;
 
     std::string workspace;
+
+    /// All registered LSP callbacks.
+    llvm::StringMap<Callback> callbacks;
 
     /// The compilation database.
     CompilationDatabase database;

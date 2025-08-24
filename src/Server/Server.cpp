@@ -3,8 +3,7 @@
 
 namespace clice {
 
-ActiveFileManager::ActiveFile& ActiveFileManager::lru_put_impl(llvm::StringRef path,
-                                                               OpenFile file) {
+ActiveFileManager::ActiveFile& ActiveFileManager::lru_put(llvm::StringRef path, OpenFile file) {
     /// If the file is not in the chain, create a new OpenFile.
     if(items.size() >= capability) {
         /// If the size exceeds the maximum size, remove the last element.
@@ -23,7 +22,7 @@ ActiveFileManager::ActiveFile& ActiveFileManager::lru_put_impl(llvm::StringRef p
 ActiveFileManager::ActiveFile& ActiveFileManager::get_or_add(llvm::StringRef path) {
     auto iter = index.find(path);
     if(iter == index.end()) {
-        return lru_put_impl(path, OpenFile{});
+        return lru_put(path, OpenFile{});
     }
 
     // If the file is in the chain, move it to the front.
@@ -34,7 +33,7 @@ ActiveFileManager::ActiveFile& ActiveFileManager::get_or_add(llvm::StringRef pat
 ActiveFileManager::ActiveFile& ActiveFileManager::add(llvm::StringRef path, OpenFile file) {
     auto iter = index.find(path);
     if(iter == index.end()) {
-        return lru_put_impl(path, std::move(file));
+        return lru_put(path, std::move(file));
     }
     iter->second->second = std::make_shared<OpenFile>(std::move(file));
 
