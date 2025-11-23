@@ -25,6 +25,8 @@ struct ProjectOptions {
 };
 
 struct Rule {
+    std::string readonly;
+
     /// All patterns of the rule.
     llvm::SmallVector<std::string> patterns;
 

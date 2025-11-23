@@ -49,7 +49,9 @@
     patterns = ["**/*"]
 
     # Commands to append to the original command list (e.g., ["-std=c++17"]).
+    # For options with path arguments (e.g., -I, -isystem), you need to use absolute paths.
     append = []
 
     # Commands to remove from the original command list.
+    # For options with path arguments (e.g., -I, -isystem), you need to use absolute paths.
     remove = []

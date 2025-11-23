@@ -12,6 +12,8 @@ namespace clice {
 
 using GlobCharSet = std::bitset<256>;
 
+using GlobParseError = std::string;
+
 /// This class implements a glob pattern matcher to parse patterns to
 /// watch relative to the base path.
 ///
@@ -34,8 +36,8 @@ public:
     /// \param MaxSubPatterns if provided limit the number of allowed subpatterns
     ///                       created from expanding braces otherwise disable
     ///                       brace expansion
-    static std::expected<GlobPattern, std::string> create(llvm::StringRef s,
-                                                          size_t max_subpattern_num = 100);
+    static std::expected<GlobPattern, GlobParseError> create(llvm::StringRef s,
+                                                             size_t max_subpattern_num = 100);
 
     // Returns true for glob pattern "*" or "**". Can be used to avoid expensive
     // preparation/acquisition of the input for match().

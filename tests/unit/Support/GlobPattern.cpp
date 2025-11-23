@@ -1,4 +1,3 @@
-#include <iostream>
 #include "Test/Test.h"
 #include "Support/GlobPattern.h"
 
@@ -10,7 +9,7 @@ namespace {
     const char* PatString_##NAME = PAT;                                                            \
     auto Res##NAME = clice::GlobPattern::create(PatString_##NAME, 100);                            \
     if(!Res##NAME.has_value()) {                                                                   \
-        std::cout << Res##NAME.error() << '\n';                                                    \
+        llvm::errs() << std::format("{}", Res##NAME.error()) << '\n';                              \
     }                                                                                              \
     assert(Res##NAME.has_value());                                                                 \
     auto NAME = Res##NAME.value();
