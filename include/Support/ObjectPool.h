@@ -10,6 +10,8 @@ class StringSet {
 public:
     using ID = std::uint32_t;
 
+    constexpr static ID InvalidID = 0;
+
     StringSet(llvm::BumpPtrAllocator& allocator) : allocator(allocator) {
         strings.emplace_back();
     }
@@ -26,10 +28,10 @@ public:
 
     ID get(llvm::StringRef s) {
         if(s.empty()) {
-            return ID(0);
+            return InvalidID;
         }
 
-        auto [it, success] = cache.try_emplace(s, ID(0));
+        auto [it, success] = cache.try_emplace(s, InvalidID);
         if(!success) {
             return it->second;
         }
@@ -52,6 +54,10 @@ public:
 
     llvm::StringRef save(llvm::StringRef s) {
         return get(get(s));
+    }
+
+    llvm::BumpPtrAllocator& get_allocator() {
+        return allocator;
     }
 
 private:
@@ -80,7 +86,7 @@ struct object_ptr {
         return ptr;
     }
 
-    explicit operator bool() const noexcept {
+    explicit operator bool () const noexcept {
         return ptr != nullptr;
     }
 

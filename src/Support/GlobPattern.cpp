@@ -288,7 +288,7 @@ std::expected<GlobPattern::SubGlobPattern, std::string>
     return pat;
 }
 
-bool GlobPattern::match(llvm::StringRef str) {
+bool GlobPattern::match(llvm::StringRef str) const {
     if(!str.consume_front(prefix)) {
         return false;
     }

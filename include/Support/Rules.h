@@ -3,9 +3,9 @@
 #include "Server/Config.h"
 #include "Support/Enum.h"
 #include "Support/GlobPattern.h"
+#include "Support/ObjectPool.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "clang/Driver/Options.h"
 
 namespace clice {
 
@@ -17,14 +17,12 @@ namespace clice {
 /// 4. remove field is not empty.
 bool has_effect(const config::Rule& rule);
 
-using DriverOptID = clang::driver::options::ID;
-
 /// A derived driver option with its arguments represented as strings.
 /// Used in Rule's append and remove fields.
 struct DenseDeriverOptions {
-    /// TODO: Use llvm::StringRef allocated by StringSet to store compile options instead of
-    /// std::string.
-    using ArgPair = std::pair<DriverOptID, std::string>;
+    // It's same with clang::driver::options::ID in clang/Driver/Options.h
+    using DriverOptID = uint32_t;
+    using ArgPair = std::pair<DriverOptID, StringSet::ID>;
 
     llvm::SmallVector<ArgPair> options;
 
@@ -70,24 +68,48 @@ struct Rule {
     /// Arguments to remove from the command.
     DenseDeriverOptions remove;
 
+    /// Apply this rule to the given arguments list.
+    void apply(StringSet& pool, std::vector<const char*> arguments) const;
+
+    const bool match(llvm::StringRef file) const {
+        return std::ranges::any_of(pattern, [&](const GlobPattern& p) { return p.match(file); });
+    }
+
     /// Try to create the rule from config::Rule. The rule from configuration file should be
     /// pre-validated by `has_effect` function.
     /// Parse errors will be returned in `errors` with it's index in `rule.patterns` if any.
     /// Unrecognized options in append or remove will be ignored.
     static auto create(config::Rule rule,
-                       llvm::SmallVectorImpl<std::pair<uint32_t, GlobParseError>>& errors
-                       /*, StringSet pool*/) -> std::optional<Rule>;
+                       llvm::SmallVectorImpl<std::pair<uint32_t, GlobParseError>>& errors,
+                       StringSet& pool) -> std::optional<Rule>;
 };
 
 /// Manages all rules loaded from configuration file.
 class RuleManager {
 public:
-    /// Apply rules to the given file path, and fill in the derived append/remove options.
-    size_t apply(llvm::StringRef file, DenseDeriverOptions& append, DenseDeriverOptions& remove);
+    /// Find the first matching rule for the given file path.
+    /// Return nullopt if no rule matches.
+    std::optional<const Rule*> lookup(llvm::StringRef file);
 
 private:
     /// All rules loaded from configuration file in the occurrence order.
     llvm::SmallVector<std::unique_ptr<Rule>> rules;
+
+    struct InlineCache {
+        /// FIXME: use StringSet::ID for file path
+        // The cached file path.
+        llvm::StringRef file;
+
+        // The index of the matched rule in `rules` vector.
+        const Rule* rule;
+    };
+
+    constexpr static size_t MaxCacheSize = 4;
+
+    /// A small inline cache to speed up rule matching for frequently accessed files.
+    /// The cache uses a simple LRU-like replacement policy, and should be invalidated
+    /// when rules are reloaded.
+    llvm::SmallVector<InlineCache, MaxCacheSize> caches;
 };
 
 }  // namespace clice
